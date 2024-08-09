@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinni Trainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #frequencyCanvas {
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tinitus Trainer</h1>
+    <canvas id="frequencyCanvas" width="800" height="100"></canvas>
+    <div class="controls">
+        <button onclick="adjustFrequency(-10)">Lower Frequency</button>
+        <span id="frequencyDisplay">1000 Hz</span>
+        <button onclick="adjustFrequency(10)">Higher Frequency</button>
+    </div>
+    <div class="controls">
+        <label for="duration">Duration:</label>
+        <input type="number" id="duration" value="1" step="0.1">
+        <label for="interval">Interval:</label>
+        <input type="number" id="interval" value="0.3" step="0.1">
+        <button id="startStop">Start</button>
+    </div>
+    <div class="controls">
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="100" value="50">
+        <span id="volumeDisplay">50%</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('frequencyCanvas');
+        const ctx = canvas.getContext('2d');
+        const frequencyDisplay = document.getElementById('frequencyDisplay');
+        const durationInput = document.getElementById('duration');
+        const intervalInput = document.getElementById('interval');
+        const startStopButton = document.getElementById('startStop');
+        const volumeControl = document.getElementById('volume');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        let frequency = 1000; // Initial frequency (Hz)
+        let isPlaying = false;
+        let intervalTimer;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let gainNode = audioContext.createGain();
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(0, 50);
+            ctx.lineTo(canvas.width, 50);
+            ctx.stroke();
+
+            // Draw frequency markers and numbers
+            for (let i = 0; i <= canvas.width; i += 80) {
+                const freq = 1000 + (i / canvas.width) * 11000;
+                ctx.fillText(freq.toFixed(0) + ' Hz', i, 30);
+                ctx.beginPath();
+                ctx.moveTo(i, 45);
+                ctx.lineTo(i, 55);
+                ctx.stroke();
+            }
+
+            // Draw the marker
+            const markerX = (frequency - 1000) / 11000 * canvas.width;
+            ctx.fillStyle = 'red';
+            ctx.fillRect(markerX - 5, 45, 10, 10);
+        }
+
+        function adjustFrequency(delta) {
+            frequency = Math.max(1000, Math.min(12000, frequency + delta));
+            frequencyDisplay.textContent = frequency.toFixed(0) + ' Hz';
+            draw();
+        }
+
+        function playTone() {
+            let oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(volumeControl.value / 100, audioContext.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, parseFloat(durationInput.value) * 1000);
+        }
+
+        function startStopTone() {
+            if (isPlaying) {
+                clearInterval(intervalTimer);
+                startStopButton.textContent = 'Start';
+                isPlaying = false;
+            } else {
+                playTone();
+                intervalTimer = setInterval(playTone, (parseFloat(durationInput.value) + parseFloat(intervalInput.value)) * 1000);
+                startStopButton.textContent = 'Stop';
+                isPlaying = true;
+            }
+        }
+
+        startStopButton.addEventListener('click', startStopTone);
+
+        volumeControl.addEventListener('input', function() {
+            volumeDisplay.textContent = volumeControl.value + '%';
+            gainNode.gain.setValueAtTime(volumeControl.value / 100, audioContext.currentTime);
+        });
+
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            frequency = 1000 + (x / canvas.width) * 11000;
+            frequencyDisplay.textContent = frequency.toFixed(0) + ' Hz';
+            draw();
+        });
+
+        draw();
+    </script>
+</body>
+</html>
