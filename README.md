@@ -16,7 +16,7 @@ For it just to 'vanish', even for an hour or two, made it worth it for me. I cou
 1. Just hit 'Start', and adjust the volume to a level that is comfortable, it is not based on LOUD sound, so DO NOT HAVE IT LOUD.
 2. Stop it and listen to your tinitus, think about the freqency or frequencies (in my case) you can hear.
 3. Hit play and try and adjust the sound generated to be close to any one of the frequencies you hear with your tinitus.
-4. Once found, adjust the perdiod to maximise the effect. And note the frequency.
+4. Once found, adjust the perdiod to maximise the effect. And note the frequency. I find 3 secs of sound and two secs of silence works for me.
 5. If you have more than one, do one for a while and then the other.
 
 **RESULT**
