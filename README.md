@@ -1,4 +1,4 @@
-***TINI TRAINER***
+**TINI-TRAINER**
 
 Read an article in NewScientist, about using sound to aleviate Tinitus. 
 This app is based on what that article said.
