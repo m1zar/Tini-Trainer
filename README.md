@@ -9,6 +9,8 @@ My tinitus is not an ear problem, it's somewhere in my brain, and for that it do
 I did almost cry the first time I used it (while writing it), as it had been with me 24/7 for about 5 years!
 For it just to 'vanish', even for an hour or two, made it worth it for me. I could hear faint sounds I had not heard in years.
 
+![image](https://github.com/user-attachments/assets/73dd8878-bd0e-450a-a499-5886ea0381f5)
+
 **ROUGHT USEAGE**
 
 1. Just hit play, and adjust the volume to a level that is comfortable, it is not based on LOUD sound, so DO NOT HAVE IT LOUD.
@@ -27,3 +29,4 @@ Don't raise the volume up, thinking it will work better. It doesn't.
 Be extra carefull with headphones.
 
 **ENJOY!**
+
