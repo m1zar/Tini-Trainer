@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinnitus Trainer</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5a623;
+            --background-color: #f0f4f8;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        #frequencyCanvas {
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            margin-top: 10px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        input[type="number"], input[type="range"] {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+        }
+        label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        #frequencyDisplay {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            #frequencyCanvas {
+                width: 100%;
+                height: auto;
+            }
+            .controls {
+                padding: 10px;
+            }
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Tinnitus Trainer</h1>
+    <canvas id="frequencyCanvas" width="800" height="100"></canvas>
+    <div class="controls">
+        <button onclick="adjustFrequency(-10)">Lower Frequency</button>
+        <span id="frequencyDisplay">4488 Hz</span>
+        <button onclick="adjustFrequency(10)">Higher Frequency</button>
+    </div>
+    <div class="controls">
+        <label for="duration">Duration (s):</label>
+        <input type="number" id="duration" value="3" step="0.5" min="0.5" max="10">
+        <label for="interval">Interval (s):</label>
+        <input type="number" id="interval" value="3" step="0.5" min="0.5" max="10">
+        <button id="startStop">Start</button>
+    </div>
+    <div class="controls">
+        <label for="volume">Volume:</label>
+        <input type="range" id="volume" min="0" max="100" value="30">
+        <span id="volumeDisplay">30%</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('frequencyCanvas');
+        const ctx = canvas.getContext('2d');
+        const frequencyDisplay = document.getElementById('frequencyDisplay');
+        const durationInput = document.getElementById('duration');
+        const intervalInput = document.getElementById('interval');
+        const startStopButton = document.getElementById('startStop');
+        const volumeControl = document.getElementById('volume');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        let frequency = 4488;
+        let isPlaying = false;
+        let intervalTimer;
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let gainNode = audioContext.createGain();
+
+        // Function to set a cookie
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            let expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        // Function to get a cookie
+        function getCookie(name) {
+            let cname = name + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(cname) === 0) {
+                    return c.substring(cname.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        // Save settings to cookies
+        function saveSettings() {
+            setCookie("tinnitusFrequency", frequency.toFixed(0), 30); // Save for 30 days
+            setCookie("tinnitusDuration", durationInput.value, 30);
+            setCookie("tinnitusInterval", intervalInput.value, 30);
+            setCookie("tinnitusVolume", volumeControl.value, 30); // Save volume
+        }
+
+        // Load settings from cookies
+        function loadSettings() {
+            const savedFrequency = getCookie("tinnitusFrequency");
+            const savedDuration = getCookie("tinnitusDuration");
+            const savedInterval = getCookie("tinnitusInterval");
+            const savedVolume = getCookie("tinnitusVolume"); // Get volume from cookie
+
+            if (savedFrequency) {
+                frequency = parseFloat(savedFrequency);
+                frequencyDisplay.textContent = frequency.toFixed(0) + ' Hz';
+            }
+            if (savedDuration) {
+                durationInput.value = parseFloat(savedDuration);
+            }
+            if (savedInterval) {
+                intervalInput.value = parseFloat(savedInterval);
+            }
+            if (savedVolume) { // Set volume if found in cookie
+                volumeControl.value = parseFloat(savedVolume);
+                volumeDisplay.textContent = volumeControl.value + '%';
+                gainNode.gain.setValueAtTime(volumeControl.value / 100, audioContext.currentTime);
+            }
+            draw(); // Redraw canvas with loaded frequency
+        }
+
+        function draw() {
+            //const dpr = window.devicePixelRatio || 1;
+            //canvas.width = canvas.offsetWidth * dpr;
+            //canvas.height = canvas.offsetHeight * dpr;
+            //ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(0, 50);
+            ctx.lineTo(canvas.width, 50);
+            ctx.strokeStyle = '#4a90e2';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            for (let i = 0; i <= canvas.width; i += canvas.width / 10) {
+                const freq = 1000 + (i / canvas.width) * 11000;
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.fillText(freq.toFixed(0) + ' Hz', i, 30);
+                ctx.beginPath();
+                ctx.moveTo(i, 45);
+                ctx.lineTo(i, 55);
+                ctx.stroke();
+            }
+
+            const markerX = (frequency - 1000) / 11000 * canvas.width;
+            ctx.fillStyle = '#f5a623';
+            ctx.beginPath();
+            ctx.arc(markerX, 50, 8, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function adjustFrequency(delta) {
+            frequency = Math.max(1000, Math.min(12000, frequency + delta));
+            frequencyDisplay.textContent = frequency.toFixed(0) + ' Hz';
+            draw();
+            saveSettings(); // Save after frequency adjustment
+        }
+
+        function playTone() {
+            let oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(volumeControl.value / 100, audioContext.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, parseFloat(durationInput.value) * 1000);
+        }
+
+        function startStopTone() {
+            if (isPlaying) {
+                clearInterval(intervalTimer);
+                startStopButton.textContent = 'Start';
+                isPlaying = false;
+            } else {
+                playTone();
+                intervalTimer = setInterval(playTone, (parseFloat(durationInput.value) + parseFloat(intervalInput.value)) * 1000);
+                startStopButton.textContent = 'Stop';
+                isPlaying = true;
+            }
+        }
+
+        startStopButton.addEventListener('click', startStopTone);
+
+        volumeControl.addEventListener('input', function() {
+            volumeDisplay.textContent = volumeControl.value + '%';
+            gainNode.gain.setValueAtTime(volumeControl.value / 100, audioContext.currentTime);
+            saveSettings(); // Save volume after change
+        });
+
+        // Event listeners for duration and interval inputs to save settings
+        durationInput.addEventListener('change', saveSettings);
+        intervalInput.addEventListener('change', saveSettings);
+
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            frequency = 1000 + (x / rect.width) * 11000;
+            frequencyDisplay.textContent = frequency.toFixed(0) + ' Hz';
+            draw();
+            saveSettings(); // Save after canvas click frequency adjustment
+        });
+
+        window.addEventListener('resize', draw);
+
+        // Load settings when the script loads
+        loadSettings();
+        draw(); // Initial draw after loading settings
+    </script>
+</body>
+</html>
