@@ -28,5 +28,12 @@ Main thing is not to listen at too high a volume, that would be counter-producti
 Don't raise the volume up, thinking it will work better. It doesn't.
 Be extra carefull with headphones.
 
+**THEORY OF OPERATION**
+
+As I understand from the article, when you generate a sound at the same frequency as your tinitus your brain hears it from your ear. When it's stopped, it's that moment that the brain silences the tinitus.
+It's as if it's learning that the actual sound is there, then gone. Perversley it's not the sound that helps, it's going from sound to no-sound at that frequency that does the trick.
+I don't know if it pays to train daily or anything like that, but when it's bad it helps give me a break. There's a lot of potential to improve this, it's very basic. Please feel free to share experiences (Good or bad) using it.
+Perhaps we can improve it's effectiveness with shared ideas and experimentation.
+
 **ENJOY!**
 
